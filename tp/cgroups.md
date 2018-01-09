@@ -30,6 +30,11 @@ Ls 2 process stress utilisent chacun 50% du core 0 de la machine :
 
 ## Pareil mais Container-1 sera limité à 75% du core 0 et container-2 25%
 
+```
+docker run -d --name container-2 --cpuset-cpus 0 --cpu-shares 256 stress
+docker run -d --name container-1 --cpuset-cpus 0 --cpu-shares 768 stress    
+```
+
 # Limiter une fork bomb avec `--pids-limit`
 
 `docker run --rm -it --pids-limit 200 debian:jessie bash`
