@@ -1,0 +1,44 @@
+# Layers images
+## Réutilisation des layers dans les images
+
+Dockerfile.base
+
+```dockerfile
+FROM alpine
+RUN touch /test
+```
+
+Dockerfile
+
+```dockerfile
+FROM alpine
+RUN touch /test
+RUN touch /autre-fichier
+```
+
+```
+docker build -t revollat/layers1 -f Dockerfile.base .
+docker build -t revollat/layers2 -f Dockerfile .
+```
+
+L'image Layers2 réutilise les layers déja crées par le build de l'image layers1.
+Seule la nouvelle couche ff483e925877 (i.e. RUN touch /autre-fichier) est ajoutée.
+
+```
+ubuntu@vps319836 ~/t/tmp ❯❯❯ docker image history revollat/layers1  && docker image history revollat/layers2
+IMAGE               CREATED             CREATED BY                                      SIZE                COMMENT
+ca3c65e5b8e7        9 minutes ago       /bin/sh -c touch /test                          0B
+e21c333399e0        5 weeks ago         /bin/sh -c #(nop)  CMD ["/bin/sh"]              0B
+<missing>           5 weeks ago         /bin/sh -c #(nop) ADD file:2b00f26f6004576...   4.14MB
+IMAGE               CREATED             CREATED BY                                      SIZE                COMMENT
+ff483e925877        8 minutes ago       /bin/sh -c touch /autre-fichier                 0B
+ca3c65e5b8e7        9 minutes ago       /bin/sh -c touch /test                          0B
+e21c333399e0        5 weeks ago         /bin/sh -c #(nop)  CMD ["/bin/sh"]              0B
+<missing>           5 weeks ago         /bin/sh -c #(nop) ADD file:2b00f26f6004576...   4.14MB
+ubuntu@vps319836 ~/t/tmp ❯❯❯
+```
+
+## Ou se trouve ces layers ?
+```
+# docker image inspect revollat/layers1 | jq
+```
