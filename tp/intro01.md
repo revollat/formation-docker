@@ -201,7 +201,58 @@ Si il y en a plusieurs dans le dockerfile, seul le dernier est pros en compte.
 
 `docker run ubuntu-figlet`
 
+On peut surcharger CMD au lancement du container
 
+`docker run -it ubuntu-figlet bash`
+
+Maintenant on définit un entrypoint
+
+```Dockerfile
+FROM ubuntu
+RUN apt-get update
+RUN ["apt-get", "install", "figlet"]
+ENTRYPOINT ["figlet", "-f", "script"]
+```
+
+```
+$ docker run -it ubuntu-figlet Docker
+  ____             _
+ (|   \           | |
+  |    | __   __  | |   _   ,_
+ _|    |/  \_/    |/_) |/  /  |
+(/\___/ \__/ \___/| \_/|__/   |_/
+```
+
+CMD et Entrypoint
+
+```Dockerfile
+FROM ubuntu
+RUN apt-get update
+RUN ["apt-get", "install", "figlet"]
+ENTRYPOINT ["figlet", "-f", "script"]
+CMD ["hello world"]
+```
+
+```
+$ docker run -it ubuntu-figlet
+ _          _   _                             _
+| |        | | | |                           | |    |
+| |     _  | | | |  __             __   ,_   | |  __|
+|/ \   |/  |/  |/  /  \_  |  |  |_/  \_/  |  |/  /  |
+|   |_/|__/|__/|__/\__/    \/ \/  \__/    |_/|__/\_/|_/
+
+$ docker run -it ubuntu-figlet docker
+                 _
+   |            | |
+ __|   __   __  | |   _   ,_
+/  |  /  \_/    |/_) |/  /  |
+\_/|_/\__/ \___/| \_/|__/   |_/
+```
+
+Override de l'entry point
+```
+$ docker run -it --entrypoint bash ubuntu-figlet
+```
 
 ## Image d'un simple site web
 
