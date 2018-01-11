@@ -143,14 +143,64 @@ Attention : les commandes lancées par les instructions RUN ne doivent pas etres
 
 * Sending the build context to Docker
 
+C'est le dossier indiqué en paramètre ici "." qui est passé (sous forme d'archive au demon docker). Cela permet d'utiliser un demon docker distant pour builder à partir de fichiers locaux.
+(Attention à ce que le dossier contexte ne soit pas trop gros) On peut aussi utiliser un .dockerignore (un peu comme un .gitignore)
 
+* Step by Step
 
-    The build context is the . directory given to docker build.
-    It is sent (as an archive) by the Docker client to the Docker daemon.
+On part de l'image de base (2d696327ab2e) et on créer un nouveau layers pour chaque instructions du dockerfile (Ex. 46d42b95f209), ce nouveau layer sert de base pour l'instruction suivante.
 
-    This allows to use a remote machine to build using local files.
+**NB** : des layers intermédiaires peuvent etre créer et supprimés Ex. Removing intermediate container 077bc0a614e5
 
-    Be careful (or patient) if that directory is big and your link is slow.
+```
+$ docker image build --tag ubuntu-figlet .
+Sending build context to Docker daemon  5.157MB                                                     
+Step 1/3 : FROM ubuntu           
+ ---> 2d696327ab2e
+Step 2/3 : RUN apt-get update
+ ---> Running in 077bc0a614e5
+Get:1 http://archive.ubuntu.com/ubuntu xenial InRelease [247 kB]
+Get:2 http://security.ubuntu.com/ubuntu xenial-security InRelease ...
+...
+Reading package lists...
+ ---> 46d42b95f209
+Removing intermediate container 077bc0a614e5
+Step 3/3 : RUN apt-get install figlet
+ ---> Running in 405047fa6352
+...
+...
+```
+
+* Cache
+
+Si on rebuild le cache est utilisé car les instruction sont les memes. Sinon faire `docker build --no-cache`
+
+#### Lancer l'Image
+
+```
+$ docker run ubuntu-figlet
+# figlet hello
+_          _ _       
+| |__   ___| | | ___  
+| '_ \ / _ \ | |/ _ \
+| | | |  __/ | | (_) |
+|_| |_|\___|_|_|\___/
+```
+
+#### CMD et Entrypoint
+
+```Dockerfile
+FROM ubuntu
+RUN apt-get update
+RUN ["apt-get", "install", "figlet"]
+CMD figlet -f script hello
+```
+
+CMD permet de définir la commande par défaut.
+Si il y en a plusieurs dans le dockerfile, seul le dernier est pros en compte.
+
+`docker run ubuntu-figlet`
+
 
 
 ## Image d'un simple site web
