@@ -12,7 +12,9 @@ https://docs.docker.com/get-started/part2/#dockerfile
 * Le daemon créer un container et lance une commande à l'interieur
 * le daemon stream la sortie du processus vers le client docker
 
-### autre test
+
+autre test
+
 `docker run alpine echo "hello from alpine"`
 
 ### lister les containers
@@ -23,21 +25,83 @@ En cours d'éxecution :
 pour voir aussi les containers arretés :
 `docker container ls  --all`
 
+Formattage de la sortie
+
+`docker container ls --no-trunc --format "{{.ID}}\t{{.Command}}"`
+
+https://docs.docker.com/engine/reference/commandline/ps/#formatting
+
 ### S'attacher au STDIN/STDOUT du processus pour interagir
 
 `docker run -it alpine /bin/sh`
 
+
+* -t means "allocate a terminal."
+* -i means "connect stdin to the terminal."
+
+
+Se détacher avec ^P^Q
+
+S'attacher au dernier (option -l) container lancé :
+
+`docker attach $(docker container ls -lq)`
+
 ### Tourner en mode tache de fond
 
 ```
-$ docker run -d alpine sleep 1234
-b99e287a7d0be321c97bd0560f270466267266bd6acb027284aa5a5a61b6b65e
+$ docker run jpetazzo/clock
+Thu Jan 11 09:43:26 UTC 2018
+Thu Jan 11 09:43:27 UTC 2018
+Thu Jan 11 09:43:28 UTC 2018
+Thu Jan 11 09:43:29 UTC 2018
+Thu Jan 11 09:43:30 UTC 2018
+```
+Lancer en tache de fond
 
-$ ps aux | grep 1234
-root     25965  0.1  0.0   1508     4 ?        Ss   15:17   0:00 sleep 1234
+```
+$ docker run -d --name test-clock jpetazzo/clock
 ```
 
 On voit le pid du processus qui tourne sur la machine hote.
+```
+$ docker container top test-clock
+```
+
+Voir les logs en live
+
+```
+$ docker container logs -f --tail 1 test-clock
+```
+
+En démarrer plusieurs
+
+```
+$ docker run -d jpetazzo/clock
+$ docker run -d jpetazzo/clock
+$ docker run -d jpetazzo/clock
+...
+```
+
+## Modif à chaud d'un container
+
+```
+$ docker run -it ubuntu
+root@bec3b4a0948f:/# figlet Hello
+bash: figlet: command not found
+root@bec3b4a0948f:/# apt-get update
+root@bec3b4a0948f:/# apt-get install figlet
+root@bec3b4a0948f:/# figlet Hello
+ _   _      _ _
+| | | | ___| | | ___
+| |_| |/ _ \ | |/ _ \
+|  _  |  __/ | | (_) |
+|_| |_|\___|_|_|\___/
+
+root@bec3b4a0948f:/#
+```
+
+On peut arreter le container et le redémarrer, figlet est toujours présent par contre si on le supprimer et qu'on redémarrer à partir de la meme image on à perdu figlet.
+Pour le conserver, il faut commit le container avant de le supprimer.
 
 ## Lancer un container MySQL
 
@@ -59,6 +123,35 @@ mysql --user=root --password=passwd --version
 
 $ docker exec -it mydb sh
 ```
+
+## Dockerfile intro
+
+On va créer un dockerfile pour notre outil figlet
+
+```Dockerfile
+FROM ubuntu
+RUN apt-get update
+RUN apt-get install figlet
+```
+
+On build l'image.
+Attention : les commandes lancées par les instructions RUN ne doivent pas etres interactives, par example on passera en général l'option -y à apt-get install. i.e réponds y/yes à toutes les éventuels questions en auto.
+
+`docker image build --tag ubuntu-figlet .`
+
+#### Explications de ce qui se passe :
+
+* Sending the build context to Docker
+
+
+
+    The build context is the . directory given to docker build.
+    It is sent (as an archive) by the Docker client to the Docker daemon.
+
+    This allows to use a remote machine to build using local files.
+
+    Be careful (or patient) if that directory is big and your link is slow.
+
 
 ## Image d'un simple site web
 
